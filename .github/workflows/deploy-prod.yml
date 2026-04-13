@@ -45,6 +45,7 @@ jobs:
           COGNIGY_BASE_URL: ${{ secrets.COGNIGY_BASE_URL }}
           PROD_API_KEY: ${{ secrets.PROD_API_KEY }}
           PROD_ENDPOINT_ID: ${{ secrets.PROD_ENDPOINT_ID }}
+          PROD_FLOW_REF_ID: ${{ secrets.PROD_FLOW_REF_ID }}
         run: bash scripts/update-endpoint.sh prod
 
       - name: Wait for endpoint to stabilize

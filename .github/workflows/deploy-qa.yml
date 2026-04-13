@@ -24,18 +24,6 @@ jobs:
       - name: Create snapshots directory
         run: mkdir -p snapshots/agent/snapshots
 
-      - name: DEBUG - verify config.json contents
-        env:
-          CAI_BASEURL: ${{ secrets.COGNIGY_BASE_URL }}
-          CAI_APIKEY: ${{ secrets.DEV_API_KEY }}
-          CAI_AGENT: ${{ secrets.DEV_PROJECT_ID }}
-        run: |
-          printf '{"baseUrl":"%s","apiKey":"%s","agent":"%s","agentDir":"./snapshots/agent"}' \
-            "$CAI_BASEURL" "$CAI_APIKEY" "$CAI_AGENT" > ./config.json
-          echo "==> apiKey field length: $(jq -r '.apiKey' ./config.json | wc -c) chars"
-          echo "==> baseUrl field: $(jq -r '.baseUrl' ./config.json)"
-          echo "==> JSON valid: $(jq empty ./config.json && echo YES || echo NO)"
-
       - name: Create and download snapshot from Dev (via CLI)
         env:
           CAI_BASEURL: ${{ secrets.COGNIGY_BASE_URL }}
@@ -56,6 +44,7 @@ jobs:
           COGNIGY_BASE_URL: ${{ secrets.COGNIGY_BASE_URL }}
           QA_API_KEY: ${{ secrets.QA_API_KEY }}
           QA_ENDPOINT_ID: ${{ secrets.QA_ENDPOINT_ID }}
+          QA_FLOW_REF_ID: ${{ secrets.QA_FLOW_REF_ID }}
         run: bash scripts/update-endpoint.sh qa
 
       - name: Wait for endpoint to stabilize
