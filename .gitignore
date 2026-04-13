@@ -1,12 +1,13 @@
-# Never commit actual env files with real values
-config/*.env
+# Environment and credential files
+config/
+config.json
 
-# Never commit snapshot binary files
+# Snapshot binary files
 snapshots/
 *.csnap
 *.zip
 
-# Node modules if you add any
+# Node modules
 node_modules/
 
 # OS files
