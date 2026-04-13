@@ -153,3 +153,4 @@ Expected response contains: `Hello from DEV`
 - `config.json` is generated at runtime and gitignored — never commit it as it contains your API key
 - The `snapshots/` folder is gitignored — snapshot files are temporary and only exist during a pipeline run# re-trigger after API key refresh
 # fix base URL to us regional endpoint
+# trigger after adding QA_API_KEY secret
