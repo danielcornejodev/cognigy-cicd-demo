@@ -24,6 +24,27 @@ jobs:
       - name: Create snapshots directory
         run: mkdir -p snapshots/agent/snapshots
 
+      - name: DEBUG - verify config.json contents
+        env:
+          CAI_BASEURL: ${{ secrets.COGNIGY_BASE_URL }}
+          CAI_APIKEY: ${{ secrets.DEV_API_KEY }}
+          CAI_AGENT: ${{ secrets.DEV_PROJECT_ID }}
+          CAI_AGENTDIR: ./snapshots/agent
+        run: |
+          mkdir -p ./snapshots/agent/snapshots
+          cat > ./config.json << EOF
+          {
+            "baseUrl": "${CAI_BASEURL}",
+            "apiKey": "${CAI_APIKEY}",
+            "agent": "${CAI_AGENT}",
+            "agentDir": "./snapshots/agent"
+          }
+          EOF
+          echo "==> config.json length: $(wc -c < config.json) bytes"
+          echo "==> apiKey field length: $(cat config.json | jq -r '.apiKey' | wc -c) chars"
+          echo "==> baseUrl field: $(cat config.json | jq -r '.baseUrl')"
+          echo "==> agent field length: $(cat config.json | jq -r '.agent' | wc -c) chars"
+
       - name: Create and download snapshot from Dev (via CLI)
         env:
           CAI_BASEURL: ${{ secrets.COGNIGY_BASE_URL }}
