@@ -1,0 +1,64 @@
+name: Deploy to Production
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  deploy-prod:
+    runs-on: ubuntu-latest
+    environment: production   # triggers the manual approval gate
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: sudo apt-get install -y jq
+
+      - name: Create snapshots directory
+        run: mkdir -p snapshots/agent/snapshots
+
+      - name: Create and download snapshot from Dev
+        env:
+          CAI_BASEURL: ${{ secrets.COGNIGY_BASE_URL }}
+          CAI_APIKEY: ${{ secrets.DEV_API_KEY }}
+          CAI_AGENT: ${{ secrets.DEV_PROJECT_ID }}
+          CAI_AGENTDIR: ./snapshots/agent
+        run: bash scripts/create-and-download-snapshot.sh
+
+      - name: Upload snapshot to Production
+        env:
+          COGNIGY_BASE_URL: ${{ secrets.COGNIGY_BASE_URL }}
+          PROD_API_KEY: ${{ secrets.PROD_API_KEY }}
+          PROD_PROJECT_ID: ${{ secrets.PROD_PROJECT_ID }}
+        run: bash scripts/upload-snapshot.sh prod
+
+      - name: Update Production endpoint
+        env:
+          COGNIGY_BASE_URL: ${{ secrets.COGNIGY_BASE_URL }}
+          PROD_API_KEY: ${{ secrets.PROD_API_KEY }}
+          PROD_ENDPOINT_ID: ${{ secrets.PROD_ENDPOINT_ID }}
+        run: bash scripts/update-endpoint.sh prod
+
+      - name: Wait for endpoint to stabilize
+        run: sleep 20
+
+      - name: Run smoke test against Production
+        env:
+          PROD_ENDPOINT_URL: ${{ secrets.PROD_ENDPOINT_URL }}
+        run: bash scripts/smoke-test.sh prod
+
+      - name: Report result
+        if: success()
+        run: echo "✅ Production deployment successful"
+
+      - name: Report failure
+        if: failure()
+        run: echo "❌ Production deployment failed"

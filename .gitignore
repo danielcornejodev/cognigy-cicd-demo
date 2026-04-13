@@ -1,0 +1,13 @@
+# Never commit actual env files with real values
+config/*.env
+
+# Never commit snapshot binary files
+snapshots/
+*.csnap
+*.zip
+
+# Node modules if you add any
+node_modules/
+
+# OS files
+.DS_Store

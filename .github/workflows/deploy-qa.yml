@@ -1,0 +1,63 @@
+name: Deploy to QA
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-qa:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js (required for Cognigy CLI)
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: sudo apt-get install -y jq
+
+      - name: Create snapshots directory
+        run: mkdir -p snapshots/agent/snapshots
+
+      - name: Create and download snapshot from Dev (via CLI)
+        env:
+          CAI_BASEURL: ${{ secrets.COGNIGY_BASE_URL }}
+          CAI_APIKEY: ${{ secrets.DEV_API_KEY }}
+          CAI_AGENT: ${{ secrets.DEV_PROJECT_ID }}
+          CAI_AGENTDIR: ./snapshots/agent
+        run: bash scripts/create-and-download-snapshot.sh
+
+      - name: Upload snapshot to QA
+        env:
+          COGNIGY_BASE_URL: ${{ secrets.COGNIGY_BASE_URL }}
+          QA_API_KEY: ${{ secrets.QA_API_KEY }}
+          QA_PROJECT_ID: ${{ secrets.QA_PROJECT_ID }}
+        run: bash scripts/upload-snapshot.sh qa
+
+      - name: Update QA endpoint
+        env:
+          COGNIGY_BASE_URL: ${{ secrets.COGNIGY_BASE_URL }}
+          QA_API_KEY: ${{ secrets.QA_API_KEY }}
+          QA_ENDPOINT_ID: ${{ secrets.QA_ENDPOINT_ID }}
+        run: bash scripts/update-endpoint.sh qa
+
+      - name: Wait for endpoint to stabilize
+        run: sleep 20
+
+      - name: Run smoke test against QA
+        env:
+          QA_ENDPOINT_URL: ${{ secrets.QA_ENDPOINT_URL }}
+        run: bash scripts/smoke-test.sh qa
+
+      - name: Report result
+        if: success()
+        run: echo "✅ QA deployment successful"
+
+      - name: Report failure
+        if: failure()
+        run: echo "❌ QA deployment failed — check logs above"
