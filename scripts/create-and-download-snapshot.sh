@@ -21,7 +21,7 @@ echo "==> JSON valid: $(jq empty ./config.json && echo YES || echo NO)"
 SNAPSHOT_NAME="release-$(date +%Y%m%d-%H%M%S)"
 echo "==> Creating snapshot: $SNAPSHOT_NAME"
 
-cognigy create snapshot "$SNAPSHOT_NAME" "Automated CI/CD snapshot"
+cognigy create snapshot "$SNAPSHOT_NAME" "Automated CI/CD snapshot" -c ./config.json
 
 echo "==> Checking for downloaded .csnap file..."
 SNAPSHOT_FILE=$(find ./snapshots/agent/snapshots -name "*.csnap" | head -1)
