@@ -152,3 +152,4 @@ Expected response contains: `Hello from DEV`
 - The trial tenant has a limit of 10 snapshots per project — old snapshots should be cleaned up periodically in the Cognigy UI under **Deploy → Snapshots**
 - `config.json` is generated at runtime and gitignored — never commit it as it contains your API key
 - The `snapshots/` folder is gitignored — snapshot files are temporary and only exist during a pipeline run# re-trigger after API key refresh
+# fix base URL to us regional endpoint
