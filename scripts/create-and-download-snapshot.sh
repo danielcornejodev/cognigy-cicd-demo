@@ -8,23 +8,19 @@ echo "==> Creating working directories..."
 mkdir -p ./snapshots/agent/snapshots
 
 echo "==> Writing CLI config.json for Dev..."
-cat > ./config.json << EOF
-{
-  "baseUrl": "${CAI_BASEURL}",
-  "apiKey": "${CAI_APIKEY}",
-  "agent": "${CAI_AGENT}",
-  "agentDir": "./snapshots/agent"
-}
-EOF
+# Use printf instead of heredoc to avoid whitespace/indentation issues
+printf '{"baseUrl":"%s","apiKey":"%s","agent":"%s","agentDir":"./snapshots/agent"}' \
+  "$CAI_BASEURL" "$CAI_APIKEY" "$CAI_AGENT" > ./config.json
 
-echo "==> Config written. Verifying (no secrets shown)..."
-echo "baseUrl: ${CAI_BASEURL}"
-echo "agent: ${CAI_AGENT}"
+echo "==> Verifying config.json structure..."
+echo "==> apiKey length: $(jq -r '.apiKey' ./config.json | wc -c) chars"
+echo "==> baseUrl: $(jq -r '.baseUrl' ./config.json)"
+echo "==> agent length: $(jq -r '.agent' ./config.json | wc -c) chars"
+echo "==> JSON valid: $(jq empty ./config.json && echo YES || echo NO)"
 
 SNAPSHOT_NAME="release-$(date +%Y%m%d-%H%M%S)"
 echo "==> Creating snapshot: $SNAPSHOT_NAME"
 
-# -y skips the interactive confirmation prompt
 cognigy create snapshot "$SNAPSHOT_NAME" "Automated CI/CD snapshot"
 
 echo "==> Checking for downloaded .csnap file..."

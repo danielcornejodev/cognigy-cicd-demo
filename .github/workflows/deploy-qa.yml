@@ -29,21 +29,12 @@ jobs:
           CAI_BASEURL: ${{ secrets.COGNIGY_BASE_URL }}
           CAI_APIKEY: ${{ secrets.DEV_API_KEY }}
           CAI_AGENT: ${{ secrets.DEV_PROJECT_ID }}
-          CAI_AGENTDIR: ./snapshots/agent
         run: |
-          mkdir -p ./snapshots/agent/snapshots
-          cat > ./config.json << EOF
-          {
-            "baseUrl": "${CAI_BASEURL}",
-            "apiKey": "${CAI_APIKEY}",
-            "agent": "${CAI_AGENT}",
-            "agentDir": "./snapshots/agent"
-          }
-          EOF
-          echo "==> config.json length: $(wc -c < config.json) bytes"
-          echo "==> apiKey field length: $(cat config.json | jq -r '.apiKey' | wc -c) chars"
-          echo "==> baseUrl field: $(cat config.json | jq -r '.baseUrl')"
-          echo "==> agent field length: $(cat config.json | jq -r '.agent' | wc -c) chars"
+          printf '{"baseUrl":"%s","apiKey":"%s","agent":"%s","agentDir":"./snapshots/agent"}' \
+            "$CAI_BASEURL" "$CAI_APIKEY" "$CAI_AGENT" > ./config.json
+          echo "==> apiKey field length: $(jq -r '.apiKey' ./config.json | wc -c) chars"
+          echo "==> baseUrl field: $(jq -r '.baseUrl' ./config.json)"
+          echo "==> JSON valid: $(jq empty ./config.json && echo YES || echo NO)"
 
       - name: Create and download snapshot from Dev (via CLI)
         env:
