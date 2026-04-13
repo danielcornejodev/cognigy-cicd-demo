@@ -25,7 +25,7 @@ SNAPSHOT_NAME="release-$(date +%Y%m%d-%H%M%S)"
 echo "==> Creating snapshot: $SNAPSHOT_NAME"
 
 # -y skips the interactive confirmation prompt
-cognigy create snapshot "$SNAPSHOT_NAME" "Automated CI/CD snapshot" -y
+cognigy create snapshot "$SNAPSHOT_NAME" "Automated CI/CD snapshot"
 
 echo "==> Checking for downloaded .csnap file..."
 SNAPSHOT_FILE=$(find ./snapshots/agent/snapshots -name "*.csnap" | head -1)
