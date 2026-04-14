@@ -154,3 +154,4 @@ Expected response contains: `Hello from DEV`
 - The `snapshots/` folder is gitignored — snapshot files are temporary and only exist during a pipeline run# re-trigger after API key refresh
 # fix base URL to us regional endpoint
 # trigger after adding QA_API_KEY secret
+# trigger after endpoint id update
