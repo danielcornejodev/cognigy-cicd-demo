@@ -21,15 +21,20 @@ echo "==> Snapshot ID: $SNAPSHOT_ID"
 echo "==> Flow Reference ID: $FLOW_REF_ID"
 echo "==> Updating endpoint: $TARGET_ENDPOINT_ID"
 
-curl -s -X PATCH "$COGNIGY_BASE_URL/v2.0/endpoints/$TARGET_ENDPOINT_ID" \
+PATCH_RESPONSE=$(curl -s -X PATCH "$COGNIGY_BASE_URL/v2.0/endpoints/$TARGET_ENDPOINT_ID" \
   -H "X-API-Key: $TARGET_API_KEY" \
   -H "Content-Type: application/json" \
   -d "{
-    \"snapshot\": {
-      \"snapshotId\": \"$SNAPSHOT_ID\",
-      \"flowId\": \"$FLOW_REF_ID\"
-    }
-  }"
+    \"entrypoint\": \"$SNAPSHOT_ID\",
+    \"flowId\": \"$FLOW_REF_ID\"
+  }")
 
-echo ""
-echo "==> Endpoint updated in $TARGET_ENV"
+echo "Patch response: $PATCH_RESPONSE"
+
+# Check for 4xx error in response
+if echo "$PATCH_RESPONSE" | jq -e '.status' 2>/dev/null | grep -q "4[0-9][0-9]"; then
+  echo "ERROR: Endpoint update failed"
+  exit 1
+fi
+
+echo "==> Endpoint updated successfully in $TARGET_ENV"
