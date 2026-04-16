@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-TARGET_ENV=$1  # "qa" or "prod"
+TARGET_ENV=$1
 
 SNAPSHOT_FILE=$(cat ./snapshots/snapshot_path.txt)
 
@@ -21,8 +21,10 @@ else
   exit 1
 fi
 
+SNAPSHOT_NAME=$(cat ./snapshots/snapshot_name.txt)
 echo "==> Uploading snapshot to $TARGET_ENV (project: $TARGET_PROJECT_ID)..."
 echo "==> File: $SNAPSHOT_FILE"
+echo "==> Snapshot name: $SNAPSHOT_NAME"
 
 UPLOAD_RESPONSE=$(curl -s -X POST "$COGNIGY_BASE_URL/v2.0/snapshots/upload" \
   -H "X-API-Key: $TARGET_API_KEY" \
@@ -31,14 +33,37 @@ UPLOAD_RESPONSE=$(curl -s -X POST "$COGNIGY_BASE_URL/v2.0/snapshots/upload" \
 
 echo "Upload response: $UPLOAD_RESPONSE"
 
-# Extract the new snapshot ID — try both common field names
-NEW_SNAPSHOT_ID=$(echo "$UPLOAD_RESPONSE" | jq -r '._id // .snapshotId // empty')
+TASK_ID=$(echo "$UPLOAD_RESPONSE" | jq -r '._id // empty')
 
-if [ -z "$NEW_SNAPSHOT_ID" ]; then
-  echo "ERROR: Could not extract snapshot ID. Full response above."
-  echo "==> Tip: Check the field name in the response and update this script."
+if [ -z "$TASK_ID" ]; then
+  echo "ERROR: Could not extract task ID from upload response"
   exit 1
 fi
 
-echo "==> Snapshot uploaded. ID in $TARGET_ENV: $NEW_SNAPSHOT_ID"
+echo "==> Upload task queued: $TASK_ID"
+echo "==> Waiting 30 seconds for upload task to complete..."
+sleep 30
+
+# Query snapshots list and find the one matching our snapshot name
+echo "==> Fetching snapshot ID by name: $SNAPSHOT_NAME"
+
+SNAPSHOTS_RESPONSE=$(curl -s -X GET \
+  "$COGNIGY_BASE_URL/v2.0/snapshots?projectId=$TARGET_PROJECT_ID" \
+  -H "X-API-Key: $TARGET_API_KEY")
+
+echo "Snapshots response: $SNAPSHOTS_RESPONSE"
+
+NEW_SNAPSHOT_ID=$(echo "$SNAPSHOTS_RESPONSE" | jq -r \
+  --arg name "$SNAPSHOT_NAME" \
+  '.items[] | select(.name == $name) | ._id // empty' | head -1)
+
+if [ -z "$NEW_SNAPSHOT_ID" ]; then
+  echo "ERROR: Could not find snapshot with name '$SNAPSHOT_NAME' in $TARGET_ENV"
+  echo "==> Available snapshots:"
+  echo "$SNAPSHOTS_RESPONSE" | jq '[.items[] | {id: ._id, name: .name}]'
+  exit 1
+fi
+
+echo "==> Snapshot ID in $TARGET_ENV: $NEW_SNAPSHOT_ID"
 echo "$NEW_SNAPSHOT_ID" > ./snapshots/${TARGET_ENV}_snapshot_id.txt
+echo "==> Snapshot ID saved."
