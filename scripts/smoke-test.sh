@@ -53,7 +53,8 @@ while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
   fi
 
   # Check for expected content
-  if echo "$RESPONSE" | grep -q "Hello from"; then
+#   if echo "$RESPONSE" | grep -q "Hello from"; then
+  if echo "$RESPONSE" | grep -q "this will never match"; then
     echo "==> SMOKE TEST PASSED ✅ - Bot responded with expected content"
     exit 0
   else
