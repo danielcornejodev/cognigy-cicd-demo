@@ -55,12 +55,12 @@ echo "Snapshots response: $SNAPSHOTS_RESPONSE"
 
 NEW_SNAPSHOT_ID=$(echo "$SNAPSHOTS_RESPONSE" | jq -r \
   --arg name "$SNAPSHOT_NAME" \
-  '.items[] | select(.name == $name) | ._id // empty' | head -1)
+  '._embedded.snapshots[] | select(.name == $name) | .snapshotId // empty' | head -1)
 
 if [ -z "$NEW_SNAPSHOT_ID" ]; then
   echo "ERROR: Could not find snapshot with name '$SNAPSHOT_NAME' in $TARGET_ENV"
   echo "==> Available snapshots:"
-  echo "$SNAPSHOTS_RESPONSE" | jq '[.items[] | {id: ._id, name: .name}]'
+  echo "$SNAPSHOTS_RESPONSE" | jq '[._embedded.snapshots[] | {id: .snapshotId, name: .name}]'
   exit 1
 fi
 
