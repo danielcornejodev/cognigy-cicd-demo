@@ -8,18 +8,38 @@ echo "==> Creating working directories..."
 mkdir -p ./snapshots/agent/snapshots
 
 echo "==> Writing CLI config.json for Dev..."
-# Use printf instead of heredoc to avoid whitespace/indentation issues
 printf '{"baseUrl":"%s","apiKey":"%s","agent":"%s","agentDir":"./snapshots/agent"}' \
   "$CAI_BASEURL" "$CAI_APIKEY" "$CAI_AGENT" > ./config.json
 
 echo "==> Verifying config.json structure..."
 echo "==> apiKey length: $(jq -r '.apiKey' ./config.json | wc -c) chars"
 echo "==> baseUrl: $(jq -r '.baseUrl' ./config.json)"
-echo "==> agent length: $(jq -r '.agent' ./config.json | wc -c) chars"
 echo "==> JSON valid: $(jq empty ./config.json && echo YES || echo NO)"
+echo "==> config.json full path: $(realpath ./config.json)"
+echo "==> Current working directory: $(pwd)"
 
-SNAPSHOT_NAME="release-$(date +%Y%m%d-%H%M%S)"
-echo "==> Creating snapshot: $SNAPSHOT_NAME"
+# ── VERSION FROM CHANGELOG ────────────────────────────────────────
+echo "==> Reading version from CHANGELOG.md..."
+
+if [ ! -f "./CHANGELOG.md" ]; then
+  echo "WARNING: CHANGELOG.md not found — falling back to timestamp"
+  SNAPSHOT_NAME="release-$(date +%Y%m%d-%H%M%S)"
+else
+  # Extract the first version line — format: ## v1.0 - 2026-04-17
+  CHANGELOG_VERSION=$(grep -m 1 "^## v" ./CHANGELOG.md | awk '{print $2}')
+
+  if [ -z "$CHANGELOG_VERSION" ]; then
+    echo "WARNING: No version found in CHANGELOG.md — falling back to timestamp"
+    SNAPSHOT_NAME="release-$(date +%Y%m%d-%H%M%S)"
+  else
+    # Append timestamp to make each snapshot name unique even on same version
+    SNAPSHOT_NAME="${CHANGELOG_VERSION}-$(date +%Y%m%d-%H%M%S)"
+    echo "==> Version from CHANGELOG: $CHANGELOG_VERSION"
+  fi
+fi
+
+echo "==> Snapshot name: $SNAPSHOT_NAME"
+# ── END VERSION ───────────────────────────────────────────────────
 
 cognigy create snapshot "$SNAPSHOT_NAME" "Automated CI/CD snapshot" -c ./config.json
 
