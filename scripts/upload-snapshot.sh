@@ -26,6 +26,30 @@ echo "==> Uploading snapshot to $TARGET_ENV (project: $TARGET_PROJECT_ID)..."
 echo "==> File: $SNAPSHOT_FILE"
 echo "==> Snapshot name: $SNAPSHOT_NAME"
 
+# ── SNAPSHOT CLEANUP ──────────────────────────────────────────────
+# Check snapshot count and delete oldest if at or near the 10 limit
+echo "==> Checking snapshot count in $TARGET_ENV..."
+SNAPSHOTS_RESPONSE=$(curl -s -X GET \
+  "$COGNIGY_BASE_URL/v2.0/snapshots?projectId=$TARGET_PROJECT_ID&limit=10" \
+  -H "X-API-Key: $TARGET_API_KEY")
+
+SNAPSHOT_COUNT=$(echo "$SNAPSHOTS_RESPONSE" | jq '._embedded.snapshots | length')
+echo "==> Current snapshot count: $SNAPSHOT_COUNT"
+
+if [ "$SNAPSHOT_COUNT" -ge 9 ]; then
+  OLDEST_ID=$(echo "$SNAPSHOTS_RESPONSE" | jq -r \
+    '._embedded.snapshots | sort_by(.createdAt) | first | .snapshotId')
+  OLDEST_NAME=$(echo "$SNAPSHOTS_RESPONSE" | jq -r \
+    '._embedded.snapshots | sort_by(.createdAt) | first | .name')
+  echo "==> At limit — deleting oldest snapshot: $OLDEST_NAME ($OLDEST_ID)"
+  curl -s -X DELETE "$COGNIGY_BASE_URL/v2.0/snapshots/$OLDEST_ID" \
+    -H "X-API-Key: $TARGET_API_KEY"
+  echo "==> Oldest snapshot deleted"
+else
+  echo "==> Snapshot count OK — no cleanup needed"
+fi
+# ── END CLEANUP ───────────────────────────────────────────────────
+
 UPLOAD_RESPONSE=$(curl -s -X POST "$COGNIGY_BASE_URL/v2.0/snapshots/upload" \
   -H "X-API-Key: $TARGET_API_KEY" \
   -F "projectId=$TARGET_PROJECT_ID" \
@@ -44,14 +68,11 @@ echo "==> Upload task queued: $TASK_ID"
 echo "==> Waiting 30 seconds for upload task to complete..."
 sleep 30
 
-# Query snapshots list and find the one matching our snapshot name
 echo "==> Fetching snapshot ID by name: $SNAPSHOT_NAME"
 
 SNAPSHOTS_RESPONSE=$(curl -s -X GET \
-  "$COGNIGY_BASE_URL/v2.0/snapshots?projectId=$TARGET_PROJECT_ID" \
+  "$COGNIGY_BASE_URL/v2.0/snapshots?projectId=$TARGET_PROJECT_ID&limit=10" \
   -H "X-API-Key: $TARGET_API_KEY")
-
-echo "Snapshots response: $SNAPSHOTS_RESPONSE"
 
 NEW_SNAPSHOT_ID=$(echo "$SNAPSHOTS_RESPONSE" | jq -r \
   --arg name "$SNAPSHOT_NAME" \
