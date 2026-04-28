@@ -39,6 +39,13 @@ jobs:
           QA_PROJECT_ID: ${{ secrets.QA_PROJECT_ID }}
         run: bash scripts/upload-snapshot.sh qa
 
+      - name: Restore snapshot in QA
+        env:
+          COGNIGY_BASE_URL: ${{ secrets.COGNIGY_BASE_URL }}
+          QA_API_KEY: ${{ secrets.QA_API_KEY }}
+          QA_PROJECT_ID: ${{ secrets.QA_PROJECT_ID }}
+        run: bash scripts/restore-snapshot.sh qa        
+
       - name: Update QA endpoint
         env:
           COGNIGY_BASE_URL: ${{ secrets.COGNIGY_BASE_URL }}

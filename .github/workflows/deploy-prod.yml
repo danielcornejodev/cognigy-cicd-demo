@@ -40,6 +40,13 @@ jobs:
           PROD_PROJECT_ID: ${{ secrets.PROD_PROJECT_ID }}
         run: bash scripts/upload-snapshot.sh prod
 
+      - name: Restore snapshot in Production
+        env:
+          COGNIGY_BASE_URL: ${{ secrets.COGNIGY_BASE_URL }}
+          PROD_API_KEY: ${{ secrets.PROD_API_KEY }}
+          PROD_PROJECT_ID: ${{ secrets.PROD_PROJECT_ID }}
+        run: bash scripts/restore-snapshot.sh prod        
+
       - name: Update Production endpoint
         env:
           COGNIGY_BASE_URL: ${{ secrets.COGNIGY_BASE_URL }}
