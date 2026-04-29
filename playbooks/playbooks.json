@@ -1,5 +1,6 @@
 [
   {
+    "name": "Smoke Test - Greeting",
     "playbookId": "69dc11dd63288cf2950b0dd4",
     "entrypoint": "69dc0fb55c48f0589e2f35b6",
     "flowId": "69dc1080746a30a8cd436feb",
