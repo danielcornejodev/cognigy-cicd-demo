@@ -41,6 +41,29 @@ fi
 echo "==> Snapshot name: $SNAPSHOT_NAME"
 # ── END VERSION ───────────────────────────────────────────────────
 
+# ── DEV SNAPSHOT CLEANUP ─────────────────────────────────────────
+echo "==> Checking Dev snapshot count..."
+DEV_SNAPSHOTS=$(curl -s -X GET \
+  "$CAI_BASEURL/v2.0/snapshots?projectId=$CAI_AGENT&limit=10" \
+  -H "X-API-Key: $CAI_APIKEY")
+
+DEV_SNAPSHOT_COUNT=$(echo "$DEV_SNAPSHOTS" | jq '._embedded.snapshots | length')
+echo "==> Current Dev snapshot count: $DEV_SNAPSHOT_COUNT"
+
+if [ "$DEV_SNAPSHOT_COUNT" -ge 9 ]; then
+  OLDEST_ID=$(echo "$DEV_SNAPSHOTS" | jq -r \
+    '._embedded.snapshots | sort_by(.createdAt) | first | .snapshotId')
+  OLDEST_NAME=$(echo "$DEV_SNAPSHOTS" | jq -r \
+    '._embedded.snapshots | sort_by(.createdAt) | first | .name')
+  echo "==> At limit — deleting oldest Dev snapshot: $OLDEST_NAME ($OLDEST_ID)"
+  curl -s -X DELETE "$CAI_BASEURL/v2.0/snapshots/$OLDEST_ID" \
+    -H "X-API-Key: $CAI_APIKEY"
+  echo "==> Oldest Dev snapshot deleted"
+else
+  echo "==> Dev snapshot count OK — no cleanup needed"
+fi
+# ── END DEV CLEANUP ──────────────────────────────────────────────
+
 cognigy create snapshot "$SNAPSHOT_NAME" "Automated CI/CD snapshot" -c ./config.json
 
 echo "==> Checking for downloaded .csnap file..."
