@@ -4,15 +4,20 @@ set -e
 echo "==> Installing Cognigy CLI..."
 npm install -g @cognigy/cognigy-cli
 
-echo "==> Writing CLI config.json for QA..."
-printf '{"baseUrl":"%s","apiKey":"%s","agent":"%s","agentDir":"./snapshots/agent"}' \
+echo "==> Writing CLI config.json..."
+printf '{"baseUrl":"%s","apiKey":"%s","agent":"%s","agentDir":"."}' \
   "$CAI_BASEURL" "$CAI_APIKEY" "$CAI_AGENT" > ./config.json
 
 echo "==> Verifying config..."
 echo "==> apiKey length: $(jq -r '.apiKey' ./config.json | wc -c) chars"
 echo "==> baseUrl: $(jq -r '.baseUrl' ./config.json)"
+echo "==> agentDir: $(jq -r '.agentDir' ./config.json)"
 
-echo "==> Running playbooks from playbooks/playbooks.json..."
+echo "==> Verifying playbooks.json..."
+cat ./playbooks/playbooks.json
+echo "==> Playbook count: $(jq 'length' ./playbooks/playbooks.json)"
+
+echo "==> Running playbooks..."
 cognigy run --file ./playbooks/playbooks.json
 
 echo "==> Checking results..."
