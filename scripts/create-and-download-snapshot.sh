@@ -8,12 +8,14 @@ echo "==> Creating working directories..."
 mkdir -p ./snapshots/agent/snapshots
 
 echo "==> Writing CLI config.json for Dev..."
-printf '{"baseUrl":"%s","apiKey":"%s","agent":"%s","agentDir":"./snapshots/agent"}' \
+printf '{"name":"cicd-pipeline","baseUrl":"%s","apiKey":"%s","agent":"%s","agentDir":"./snapshots/agent","filePath":"./config.json"}' \
   "$CAI_BASEURL" "$CAI_APIKEY" "$CAI_AGENT" > ./config.json
 
 echo "==> Verifying config.json structure..."
 echo "==> apiKey length: $(jq -r '.apiKey' ./config.json | wc -c) chars"
 echo "==> baseUrl: $(jq -r '.baseUrl' ./config.json)"
+echo "==> name: $(jq -r '.name' ./config.json)"
+echo "==> filePath: $(jq -r '.filePath' ./config.json)"
 echo "==> JSON valid: $(jq empty ./config.json && echo YES || echo NO)"
 echo "==> config.json full path: $(realpath ./config.json)"
 echo "==> Current working directory: $(pwd)"
