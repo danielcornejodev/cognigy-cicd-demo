@@ -56,7 +56,7 @@ jobs:
         run: bash scripts/update-endpoint.sh prod
 
       - name: Wait for endpoint to stabilize
-        run: sleep 20
+        run: sleep 60
 
       - name: Run smoke test against Production
         env:

@@ -14,7 +14,10 @@ fi
 
 echo "==> Running smoke test against $TARGET_ENV endpoint..."
 
-MAX_ATTEMPTS=3
+echo "==> Endpoint URL length: $(echo -n $TEST_ENDPOINT_URL | wc -c) chars"
+echo "==> Endpoint URL prefix: $(echo $TEST_ENDPOINT_URL | cut -c1-40)..."
+
+MAX_ATTEMPTS=5
 ATTEMPT=1
 
 while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
@@ -42,7 +45,7 @@ while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
   if echo "$RESPONSE" | grep -q "502\|Bad Gateway\|CloudFront"; then
     echo "==> Platform temporarily unavailable (502), retrying in 30 seconds..."
     ATTEMPT=$((ATTEMPT + 1))
-    sleep 30
+    sleep 45
     continue
   fi
 
