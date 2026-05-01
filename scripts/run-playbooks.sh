@@ -20,7 +20,7 @@ export CAI_APIKEY=$CAI_APIKEY
 export CAI_AGENT=$CAI_AGENT
 export CAI_AGENTDIR=.
 
-cognigy run --file ./playbooks/playbooks.json
+cognigy run ./playbooks/playbooks.json
 
 echo "==> Checking results..."
 if [ ! -f "playbookRunResults.json" ]; then
