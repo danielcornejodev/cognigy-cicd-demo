@@ -35,7 +35,7 @@ fi
 echo "==> Playbook results:"
 cat playbookRunResults.json
 
-FAILED=$(cat playbookRunResults.json | jq '[.[] | select(.status != "succeeded")] | length')
+FAILED=$(cat playbookRunResults.json | jq '[.[] | select(.status != "successful")] | length')
 
 if [ "$FAILED" -gt "0" ]; then
   echo "ERROR: $FAILED playbook(s) failed ❌"
