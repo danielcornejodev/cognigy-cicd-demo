@@ -30,7 +30,7 @@ jobs:
           CAI_APIKEY: ${{ secrets.DEV_API_KEY }}
           CAI_AGENT: ${{ secrets.DEV_PROJECT_ID }}
           CAI_AGENTDIR: ./snapshots/agent
-        run: bash scripts/create-and-download-snapshot.sh
+        run: bash scripts/create-and-download-snapshot.sh dev
 
       - name: Upload snapshot to QA
         env:
@@ -51,7 +51,8 @@ jobs:
           CAI_BASEURL: ${{ secrets.COGNIGY_BASE_URL }}
           CAI_APIKEY: ${{ secrets.QA_API_KEY }}
           CAI_AGENT: ${{ secrets.QA_PROJECT_ID }}
-        run: bash scripts/run-playbooks.sh  
+          CAI_AGENTDIR: "."
+        run: bash scripts/run-playbooks.sh qa
 
       - name: Update QA endpoint
         env:

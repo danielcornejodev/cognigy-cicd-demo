@@ -4,22 +4,22 @@ set -e
 echo "==> Installing Cognigy CLI..."
 npm install -g @cognigy/cognigy-cli
 
-echo "==> Writing CLI config.json..."
-printf '{"name":"cicd-pipeline","baseUrl":"%s","apiKey":"%s","agent":"%s","agentDir":".","filePath":"./config.json"}' \
-  "$CAI_BASEURL" "$CAI_APIKEY" "$CAI_AGENT" > ./config.json
-
-echo "==> Verifying config..."
-echo "==> apiKey length: $(jq -r '.apiKey' ./config.json | wc -c) chars"
-echo "==> baseUrl: $(jq -r '.baseUrl' ./config.json)"
-echo "==> name: $(jq -r '.name' ./config.json)"
-echo "==> filePath: $(jq -r '.filePath' ./config.json)"
-echo "==> JSON valid: $(jq empty ./config.json && echo YES || echo NO)"
+echo "==> Verifying environment variables..."
+echo "==> CAI_BASEURL length: $(echo -n $CAI_BASEURL | wc -c) chars"
+echo "==> CAI_APIKEY length: $(echo -n $CAI_APIKEY | wc -c) chars"
+echo "==> CAI_AGENT length: $(echo -n $CAI_AGENT | wc -c) chars"
 
 echo "==> Verifying playbooks.json..."
 cat ./playbooks/playbooks.json
 echo "==> Playbook count: $(jq 'length' ./playbooks/playbooks.json)"
 
-echo "==> Running playbooks..."
+echo "==> Running playbooks via environment variables (no config.json)..."
+# Export explicitly to ensure child process inherits them
+export CAI_BASEURL=$CAI_BASEURL
+export CAI_APIKEY=$CAI_APIKEY
+export CAI_AGENT=$CAI_AGENT
+export CAI_AGENTDIR=.
+
 cognigy run --file ./playbooks/playbooks.json
 
 echo "==> Checking results..."
