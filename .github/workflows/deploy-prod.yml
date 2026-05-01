@@ -8,7 +8,7 @@ on:
 jobs:
   deploy-prod:
     runs-on: ubuntu-latest
-    environment: production   # triggers the manual approval gate
+    environment: production
 
     steps:
       - name: Checkout repository
@@ -45,7 +45,7 @@ jobs:
           COGNIGY_BASE_URL: ${{ secrets.COGNIGY_BASE_URL }}
           PROD_API_KEY: ${{ secrets.PROD_API_KEY }}
           PROD_PROJECT_ID: ${{ secrets.PROD_PROJECT_ID }}
-        run: bash scripts/restore-snapshot.sh prod        
+        run: bash scripts/restore-snapshot.sh prod
 
       - name: Update Production endpoint
         env:
@@ -56,20 +56,22 @@ jobs:
         run: bash scripts/update-endpoint.sh prod
 
       - name: Wait for endpoint to stabilize
-              run: |
-                echo "==> Polling Prod endpoint until snapshot is loaded (max 10 min)..."
-                for i in {1..20}; do
-                  echo "==> Poll attempt $i at $(date +%H:%M:%S)"
-                  RESPONSE=$(curl -s -X POST "${{ secrets.PROD_ENDPOINT_URL }}" \
-                    -H "Content-Type: application/json" \
-                    -d '{"userId":"warmup","sessionId":"warmup-'$i'","text":"hello"}')
-                  if echo "$RESPONSE" | grep -q "text"; then
-                    echo "==> Endpoint is warm and responding ✅"
-                    break
-                  fi
-                  echo "==> Not ready yet, waiting 30s..."
-                  sleep 30
-                done
+        env:
+          PROD_ENDPOINT_URL: ${{ secrets.PROD_ENDPOINT_URL }}
+        run: |
+          echo "==> Polling Prod endpoint until snapshot is loaded (max 10 min)..."
+          for i in {1..20}; do
+            echo "==> Poll attempt $i at $(date +%H:%M:%S)"
+            RESPONSE=$(curl -s -X POST "$PROD_ENDPOINT_URL" \
+              -H "Content-Type: application/json" \
+              -d "{\"userId\":\"warmup\",\"sessionId\":\"warmup-$i\",\"text\":\"hello\"}")
+            if echo "$RESPONSE" | grep -q "text"; then
+              echo "==> Endpoint is warm and responding ✅"
+              break
+            fi
+            echo "==> Not ready yet, waiting 30s..."
+            sleep 30
+          done
 
       - name: Run smoke test against Production
         env:
