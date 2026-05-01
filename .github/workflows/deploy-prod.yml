@@ -56,7 +56,20 @@ jobs:
         run: bash scripts/update-endpoint.sh prod
 
       - name: Wait for endpoint to stabilize
-        run: sleep 180
+              run: |
+                echo "==> Polling Prod endpoint until snapshot is loaded (max 10 min)..."
+                for i in {1..20}; do
+                  echo "==> Poll attempt $i at $(date +%H:%M:%S)"
+                  RESPONSE=$(curl -s -X POST "${{ secrets.PROD_ENDPOINT_URL }}" \
+                    -H "Content-Type: application/json" \
+                    -d '{"userId":"warmup","sessionId":"warmup-'$i'","text":"hello"}')
+                  if echo "$RESPONSE" | grep -q "text"; then
+                    echo "==> Endpoint is warm and responding ✅"
+                    break
+                  fi
+                  echo "==> Not ready yet, waiting 30s..."
+                  sleep 30
+                done
 
       - name: Run smoke test against Production
         env:
