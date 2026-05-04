@@ -7,9 +7,8 @@ if [ "$TARGET_ENV" == "qa" ]; then
   TARGET_API_KEY=$QA_API_KEY
   TARGET_PROJECT_ID=$QA_PROJECT_ID
 elif [ "$TARGET_ENV" == "prod" ]; then
-  echo "==> Skipping restore for prod — endpoint assignment only"
-  echo "==> Prod never uses Restore to preserve rollback safety"
-  exit 0
+  TARGET_API_KEY=$PROD_API_KEY
+  TARGET_PROJECT_ID=$PROD_PROJECT_ID
 else
   echo "ERROR: Use 'qa' or 'prod'"
   exit 1
@@ -25,7 +24,6 @@ RESTORE_RESPONSE=$(curl -s -X POST \
 
 echo "Restore response: $RESTORE_RESPONSE"
 
-# Extract task ID from restore response
 TASK_ID=$(echo "$RESTORE_RESPONSE" | jq -r '._id // empty')
 
 if [ -z "$TASK_ID" ]; then
@@ -35,7 +33,6 @@ fi
 
 echo "==> Restore task queued: $TASK_ID"
 
-# Poll for completion — check every 15 seconds, up to 10 attempts (2.5 min max)
 MAX_ATTEMPTS=10
 ATTEMPT=1
 
@@ -54,6 +51,7 @@ while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
 
   if [ "$TASK_STATUS" == "done" ] || [ "$TASK_STATUS" == "completed" ]; then
     echo "==> Restore completed successfully ✅"
+    sleep 30
     exit 0
   fi
 

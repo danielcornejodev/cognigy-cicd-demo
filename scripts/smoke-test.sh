@@ -21,7 +21,7 @@ ATTEMPT=1
 while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
   echo "==> Attempt $ATTEMPT of $MAX_ATTEMPTS..."
 
-  RESPONSE=$(curl -s --max-time 30 -X POST "$TEST_ENDPOINT_URL" \
+  RESPONSE=$(curl -s -X POST "$TEST_ENDPOINT_URL" \
     -H "Content-Type: application/json" \
     -d "{
       \"userId\": \"cicd-smoke-test\",
