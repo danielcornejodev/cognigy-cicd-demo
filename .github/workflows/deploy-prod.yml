@@ -62,16 +62,19 @@ jobs:
           echo "==> Polling Prod endpoint until snapshot is loaded (max 10 min)..."
           for i in {1..20}; do
             echo "==> Poll attempt $i at $(date +%H:%M:%S)"
-            RESPONSE=$(curl -s -X POST "$PROD_ENDPOINT_URL" \
+            RESPONSE=$(curl -s --max-time 30 -X POST "$PROD_ENDPOINT_URL" \
               -H "Content-Type: application/json" \
               -d "{\"userId\":\"warmup\",\"sessionId\":\"warmup-$i\",\"text\":\"hello\"}")
-            if echo "$RESPONSE" | grep -q "text"; then
+            echo "==> Response: $RESPONSE"
+            # Check for valid JSON response — any outputStack means the flow executed
+            if echo "$RESPONSE" | jq -e '.outputStack' > /dev/null 2>&1; then
               echo "==> Endpoint is warm and responding ✅"
-              break
+              exit 0
             fi
             echo "==> Not ready yet, waiting 30s..."
             sleep 30
           done
+          echo "==> WARNING: Endpoint did not warm up in time — smoke test may fail"
 
       - name: Run smoke test against Production
         env:

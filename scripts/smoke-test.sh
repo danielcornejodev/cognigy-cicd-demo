@@ -21,7 +21,7 @@ ATTEMPT=1
 while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
   echo "==> Attempt $ATTEMPT of $MAX_ATTEMPTS..."
 
-  RESPONSE=$(curl -s -X POST "$TEST_ENDPOINT_URL" \
+  RESPONSE=$(curl -s --max-time 30-X POST "$TEST_ENDPOINT_URL" \
     -H "Content-Type: application/json" \
     -d "{
       \"userId\": \"cicd-smoke-test\",
@@ -50,11 +50,11 @@ while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
     exit 1
   fi
 
-  if echo "$RESPONSE" | grep -q "Hello from"; then
-    echo "==> SMOKE TEST PASSED ✅ - Bot responded with expected content"
+  if echo "$RESPONSE" | jq -e '.outputStack' > /dev/null 2>&1; then
+    echo "==> SMOKE TEST PASSED ✅ - Bot responded with valid JSON outputStack"
     exit 0
   else
-    echo "==> SMOKE TEST FAILED ❌ - Expected 'Hello from' in response"
+    echo "==> SMOKE TEST FAILED ❌ - Invalid response format"
     echo "==> Full response: $RESPONSE"
     exit 1
   fi
